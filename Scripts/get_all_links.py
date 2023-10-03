@@ -27,9 +27,7 @@ def check_live_url(url):
     try:
         ret = urlopen(url, timeout=2)
         result = (ret.code == 200)
-    except HTTPError as e:
-        print(e, file=sys.stderr)
-    except URLError as e:
+    except (HTTPError, URLError) as e:
         print(e, file=sys.stderr)
     except timeout as e:
         print(e, file=sys.stderr)
@@ -43,10 +41,11 @@ def main(path):
 
     filenames = []
     for (dirpath, dnames, fnames) in os.walk(path):
-        for fname in fnames:
-            if fname.endswith('.md'):
-                filenames.append(os.sep.join([dirpath, fname]))
-
+        filenames.extend(
+            os.sep.join([dirpath, fname])
+            for fname in fnames
+            if fname.endswith('.md')
+        )
     urls = []
 
     for filename in filenames:
@@ -60,7 +59,7 @@ def main(path):
 
     for url in urls:
         if not url.startswith("http"):
-            print("markdown file name: " + url)
+            print(f"markdown file name: {url}")
             continue
         if check_live_url(url):
             print(url)
